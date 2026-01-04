@@ -70,35 +70,71 @@ function renderContent(sections) {
 }
 
 function formatContentHTML(content) {
-    // Split content into paragraphs
-    const sentences = content.split('. ');
-    const paragraphs = [];
-    let currentPara = [];
+    if (!content) return '';
     
-    sentences.forEach((sentence, i) => {
-        sentence = sentence.trim();
-        if (sentence === '') return;
-        
-        // Add period back if not last sentence
-        if (i < sentences.length - 1 && !sentence.endsWith('.')) {
-            sentence += '.';
-        }
-        
-        currentPara.push(sentence);
-        
-        // Create new paragraph every 3-4 sentences
-        if (currentPara.length >= 3) {
-            paragraphs.push(currentPara.join(' '));
-            currentPara = [];
-        }
+    // Convert markdown to HTML
+    let html = content;
+    
+    // Handle code blocks first (```...```)
+    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+        const language = lang || '';
+        return `<pre><code class="language-${language}">${escapeHtml(code.trim())}</code></pre>`;
     });
     
-    // Add remaining sentences
-    if (currentPara.length > 0) {
-        paragraphs.push(currentPara.join(' '));
+    // Handle inline code (`...`)
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    
+    // Handle bold (**text** or __text__)
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+    
+    // Handle italic (*text* or _text_)
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+    
+    // Handle links [text](url)
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    
+    // Handle bullet points (lines starting with -, *, or +)
+    const lines = html.split('\n');
+    let inList = false;
+    let processedLines = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        // Check if line is a list item
+        if (/^[-*+]\s+/.test(line)) {
+            if (!inList) {
+                processedLines.push('<ul>');
+                inList = true;
+            }
+            const itemContent = line.replace(/^[-*+]\s+/, '');
+            processedLines.push(`<li>${itemContent}</li>`);
+        } else if (line.match(/^\d+\.\s+/)) {
+            // Numbered list
+            if (!inList) {
+                processedLines.push('<ol>');
+                inList = true;
+            }
+            const itemContent = line.replace(/^\d+\.\s+/, '');
+            processedLines.push(`<li>${itemContent}</li>`);
+        } else {
+            if (inList) {
+                processedLines.push('</ul>');
+                inList = false;
+            }
+            if (line) {
+                processedLines.push(`<p>${line}</p>`);
+            }
+        }
     }
     
-    return paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('\n');
+    if (inList) {
+        processedLines.push('</ul>');
+    }
+    
+    return processedLines.join('\n');
 }
 
 // ===========================
@@ -318,23 +354,43 @@ function addChatMessage(text, type) {
 }
 
 function formatChatMessage(text) {
-    // Escape HTML to prevent XSS
-    let formatted = text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-
+    if (!text) return '';
+    
+    let formatted = text;
+    
+    // First, handle code blocks (triple backticks) - escape content
+    formatted = formatted.replace(/```([\w]*)?[\n\r]?([\s\S]*?)```/g, (match, lang, code) => {
+        const escapedCode = code
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        return `<pre><code class="language-${lang || ''}">${escapedCode.trim()}</code></pre>`;
+    });
+    
+    // Handle inline code (single backticks) - escape content
+    formatted = formatted.replace(/`([^`]+)`/g, (match, code) => {
+        const escapedCode = code
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        return `<code>${escapedCode}</code>`;
+    });
+    
+    // Escape remaining HTML (but not our formatted tags)
+    formatted = formatted.split(/(<pre>[\s\S]*?<\/pre>|<code>[\s\S]*?<\/code>)/).map((part, i) => {
+        if (i % 2 === 0) {
+            return part.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;');
+        }
+        return part;
+    }).join('');
+    
     // Convert **bold** text
-    formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-
-    // Convert *italic* text
-    formatted = formatted.replace(/\*(.+?)\*/g, '<em>$1</em>');
-
-    // Convert `code` spans
-    formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-    // Convert code blocks (``` or indented blocks)
-    formatted = formatted.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+    formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    
+    // Convert *italic* text (single asterisk, not double)
+    formatted = formatted.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
 
     // Split into lines for list processing
     const lines = formatted.split('\n');

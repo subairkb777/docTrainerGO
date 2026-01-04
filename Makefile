@@ -13,9 +13,9 @@ help:
 	@echo "  make download-fuse  - Download Fuse.js library"
 	@echo ""
 	@echo "Usage:"
-	@echo "  make process PDF=input/doc.pdf  - Process a PDF file"
-	@echo "  make serve          - Start the web server"
-	@echo "  make serve PORT=3000 - Start server on custom port"
+	@echo "  make process        - Process using config.yaml settings"
+	@echo "  make process PDF=input/doc.pdf  - Process a specific PDF file"
+	@echo "  make serve          - Start the web server (port in config.yaml)"
 	@echo ""
 	@echo "Development:"
 	@echo "  make build          - Build the binary"
@@ -32,10 +32,11 @@ setup: deps download-fuse
 	@echo "✅ Setup complete!"
 	@echo ""
 	@echo "Next steps:"
-	@echo "  1. Place PDF in input/ directory"
-	@echo "  2. make process PDF=input/your-file.pdf"
-	@echo "  3. ollama run llama3.1  (in another terminal)"
-	@echo "  4. make serve"
+	@echo "  1. Edit config.yaml to configure input type (pdf/markdown)"
+	@echo "  2. For PDF: Place PDF in input/ and update config.yaml"
+	@echo "  3. For Markdown: Place .md files in input/markdown/"
+	@echo "  4. make serve  (processes and starts server)"
+	@echo "  5. In another terminal: ollama run llama3.2"
 
 # Download Go dependencies
 deps:
@@ -54,18 +55,23 @@ download-fuse:
 # Process PDF
 process:
 	@if [ -z "$(PDF)" ]; then \
-		echo "Error: PDF parameter required"; \
-		echo "Usage: make process PDF=input/document.pdf"; \
-		exit 1; \
+		echo "→ Processing with config.yaml settings..."; \
+		go run cmd/main.go -process; \
+	else \
+		echo "→ Processing PDF: $(PDF)"; \
+		go run cmd/main.go -pdf=$(PDF) -process; \
 	fi
-	@echo "→ Processing PDF: $(PDF)"
-	@go run cmd/main.go -pdf=$(PDF)
 
 # Start web server
 serve:
-	@PORT=$${PORT:-8080}; \
-	echo "→ Starting server on port $$PORT..."; \
-	go run cmd/main.go -serve -port=$$PORT
+	@if [ -n "$(PORT)" ]; then \
+		echo "⚠️  Port configuration via Makefile is deprecated."; \
+		echo "→ Please edit config.yaml to change port (current: $(PORT))"; \
+		echo "→ Starting server with config.yaml settings..."; \
+	else \
+		echo "→ Starting server with config.yaml settings..."; \
+	fi
+	@go run cmd/main.go -serve
 
 # Build binary
 build:

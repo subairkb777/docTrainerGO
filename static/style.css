@@ -15,6 +15,8 @@
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
+    --code-bg: #f1f5f9;
+    --code-text: #c7254e;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
@@ -262,6 +264,76 @@ h4.section-heading {
     line-height: 1.8;
 }
 
+/* Markdown formatting */
+.section-content strong {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.section-content em {
+    font-style: italic;
+}
+
+.section-content code {
+    background: var(--surface);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #c7254e;
+    border: 1px solid var(--border);
+}
+
+.section-content pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.section-content pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.section-content ul,
+.section-content ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+    color: var(--text-secondary);
+}
+
+.section-content ul li,
+.section-content ol li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+.section-content ul {
+    list-style-type: disc;
+}
+
+.section-content ol {
+    list-style-type: decimal;
+}
+
+.section-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.section-content a:hover {
+    border-bottom-color: var(--primary-color);
+}
+
 .section-images {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -417,23 +489,30 @@ h4.section-heading {
 
 .bot-message code {
     background: var(--code-bg);
-    padding: 0.125rem 0.25rem;
+    color: var(--code-text);
+    padding: 0.15rem 0.4rem;
     border-radius: 3px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.9em;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.875em;
+    border: 1px solid var(--border);
 }
 
 .bot-message pre {
     background: var(--code-bg);
-    padding: 0.75rem;
+    border: 1px solid var(--border);
+    padding: 0.875rem;
     border-radius: 6px;
     overflow-x: auto;
-    margin: 0.5rem 0;
+    margin: 0.75rem 0;
+    line-height: 1.5;
 }
 
 .bot-message pre code {
     background: none;
+    border: none;
     padding: 0;
+    color: var(--text-primary);
+    font-size: 0.875em;
 }
 
 .bot-message strong {
