@@ -221,9 +221,15 @@ server:
 
 # Ollama configuration
 ollama:
+  enabled: true                    # Enable/disable AI chat functionality
   url: "http://localhost:11434"
   model: "llama3.2"
 ```
+
+> **Note**: Set `ollama.enabled: false` to run without AI chat. This is useful for:
+> - Deployments where Ollama is not available
+> - Reducing resource usage (no LLM required)
+> - Documentation-only sites without chat features
 
 ### Using Makefile
 
@@ -606,6 +612,10 @@ sudo systemctl start doctrainer
 
 ### Docker Deployment
 
+#### Option 1: Documentation Only (No AI Chat)
+
+Perfect for lightweight deployments where AI chat is not needed:
+
 ```dockerfile
 # Dockerfile
 FROM golang:1.21-alpine AS builder
@@ -626,11 +636,74 @@ EXPOSE 8080
 CMD ["./main", "-serve"]
 ```
 
+Set `ollama.enabled: false` in config.yaml before building.
+
 ```bash
 # Build and run
 docker build -t doctrainer .
 docker run -p 8080:8080 -v $(pwd)/docs:/root/docs doctrainer
 ```
+
+#### Option 2: With AI Chat (Docker Compose)
+
+For deployments requiring AI chat functionality, use separate containers:
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    command: serve
+
+  doctrainer:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docs:/root/docs
+      - ./config.yaml:/root/config.yaml
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+
+volumes:
+  ollama_data:
+```
+
+Update config.yaml to use Docker service name:
+```yaml
+ollama:
+  enabled: true
+  url: "http://ollama:11434"  # Use service name
+  model: "llama3.2"
+```
+
+```bash
+# Start both services
+docker-compose up -d
+
+# Pull Ollama model (first time only)
+docker exec -it <ollama-container-id> ollama pull llama3.2
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+**Resource Requirements:**
+- Documentation only: ~50MB RAM, 100MB disk
+- With Ollama: 4-6GB RAM, ~2GB disk (for llama3.2 model)
 
 ---
 

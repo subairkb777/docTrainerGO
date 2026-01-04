@@ -28,8 +28,9 @@ type Config struct {
 		Host string `yaml:"host"`
 	} `yaml:"server"`
 	Ollama struct {
-		URL   string `yaml:"url"`
-		Model string `yaml:"model"`
+		Enabled bool   `yaml:"enabled"`
+		URL     string `yaml:"url"`
+		Model   string `yaml:"model"`
 	} `yaml:"ollama"`
 }
 

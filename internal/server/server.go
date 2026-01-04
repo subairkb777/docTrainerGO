@@ -112,6 +112,12 @@ func (s *Server) handleChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if Ollama is available
+	if s.ollamaClient == nil {
+		s.respondWithError(w, "AI chat is disabled. Enable it in config.yaml (ollama.enabled: true)", http.StatusServiceUnavailable)
+		return
+	}
+
 	// Parse request
 	var req ChatRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

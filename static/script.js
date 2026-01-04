@@ -84,6 +84,13 @@ function formatContentHTML(content) {
     // Handle inline code (`...`)
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
     
+    // Handle images ![alt](url) - convert to img tags
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
+        // Check if URL is relative (from images directory)
+        const imageSrc = url.startsWith('images/') ? `/docs/${url}` : url;
+        return `<img src="${imageSrc}" alt="${alt}" class="inline-image" loading="lazy">`;
+    });
+    
     // Handle bold (**text** or __text__)
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
@@ -266,7 +273,34 @@ function navigateToSection(sectionId) {
 // ===========================
 // Chat Widget
 // ===========================
-function initializeChat() {
+async function initializeChat() {
+    // Check if chat is enabled
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt: '' })
+        });
+
+        const data = await response.json();
+        
+        // If we get a 503 (Service Unavailable), chat is disabled
+        if (response.status === 503 || (data.error && data.error.includes('disabled'))) {
+            // Hide chat widget completely
+            const chatWidget = document.getElementById('chatWidget');
+            const chatFab = document.getElementById('chatFab');
+            if (chatWidget) chatWidget.style.display = 'none';
+            if (chatFab) chatFab.style.display = 'none';
+            console.log('Chat functionality is disabled');
+            return;
+        }
+    } catch (error) {
+        // If there's an error checking, we'll still show the chat widget
+        console.log('Could not check chat status, assuming enabled');
+    }
+
     const chatWidget = document.getElementById('chatWidget');
     const chatFab = document.getElementById('chatFab');
     const chatToggle = document.getElementById('chatToggle');

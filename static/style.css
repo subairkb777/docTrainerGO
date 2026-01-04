@@ -334,6 +334,16 @@ h4.section-heading {
     border-bottom-color: var(--primary-color);
 }
 
+.section-content .inline-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1.5rem auto;
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+}
+
 .section-images {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

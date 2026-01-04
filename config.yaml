@@ -33,5 +33,6 @@ server:
 
 # Ollama settings
 ollama:
+  enabled: true                     # Set to false to disable AI chat functionality
   url: http://localhost:11434
   model: llama3.2

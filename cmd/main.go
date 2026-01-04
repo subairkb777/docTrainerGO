@@ -30,8 +30,11 @@ func main() {
 		fmt.Println("Processing PDF from command line...")
 	}
 
-	// Initialize Ollama client
-	ollamaClient := chat.NewOllamaClient(cfg.Ollama.URL, cfg.Ollama.Model)
+	// Initialize Ollama client if enabled
+	var ollamaClient *chat.OllamaClient
+	if cfg.Ollama.Enabled {
+		ollamaClient = chat.NewOllamaClient(cfg.Ollama.URL, cfg.Ollama.Model)
+	}
 
 	// Process document
 	proc := processor.New(cfg)
@@ -55,13 +58,17 @@ func main() {
 			log.Fatalf("Documentation directory '%s' does not exist", cfg.Output.Directory)
 		}
 
-		// Check Ollama health
-		if err := ollamaClient.HealthCheck(); err != nil {
-			log.Printf("Warning: Ollama health check failed: %v", err)
-			log.Println("Chat functionality may not work. Make sure Ollama is running:")
-			log.Printf("  ollama run %s\n", cfg.Ollama.Model)
+		// Check Ollama health if enabled
+		if cfg.Ollama.Enabled && ollamaClient != nil {
+			if err := ollamaClient.HealthCheck(); err != nil {
+				log.Printf("Warning: Ollama health check failed: %v", err)
+				log.Println("Chat functionality may not work. Make sure Ollama is running:")
+				log.Printf("  ollama run %s\n", cfg.Ollama.Model)
+			} else {
+				fmt.Println("✓ Connected to Ollama")
+			}
 		} else {
-			fmt.Println("✓ Connected to Ollama")
+			fmt.Println("ℹ️  AI chat disabled (set ollama.enabled: true in config.yaml to enable)")
 		}
 
 		// Start server
