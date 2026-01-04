@@ -10,7 +10,7 @@
     <!-- Sidebar Navigation -->
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h2>{{.Title}}</h2>
+            <h2 id="docTitle">{{.Title}}</h2>
             <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
                 <span></span>
                 <span></span>
@@ -30,42 +30,21 @@
             <div id="searchResults" class="search-results"></div>
         </div>
 
-        <!-- Navigation Menu -->
+        <!-- Navigation Menu (dynamically loaded) -->
         <ul class="nav-menu" id="navMenu">
-            {{range .NavigationItems}}
-            <li class="nav-item nav-level-{{.Level}}">
-                <a href="#{{.ID}}" class="nav-link">{{.Heading}}</a>
-            </li>
-            {{end}}
+            <!-- Navigation items will be loaded from content.json -->
         </ul>
     </nav>
 
     <!-- Main Content -->
     <main class="main-content" id="mainContent">
         <div class="content-wrapper">
-            <h1 class="page-title">{{.Title}}</h1>
+            <h1 class="page-title" id="pageTitle">{{.Title}}</h1>
             
-            <!-- Documentation Sections -->
-            {{range .Sections}}
-            <section class="doc-section" id="{{.ID}}">
-                <h{{.Level}} class="section-heading">{{.Heading}}</h{{.Level}}>
-                
-                <div class="section-content">
-                    {{formatContent .Content}}
-                </div>
-
-                <!-- Images -->
-                {{if .Images}}
-                <div class="section-images">
-                    {{range .Images}}
-                    <div class="image-container">
-                        <img src="/docs/images/{{.}}" alt="{{.}}" loading="lazy">
-                    </div>
-                    {{end}}
-                </div>
-                {{end}}
-            </section>
-            {{end}}
+            <!-- Documentation Sections (dynamically loaded) -->
+            <div id="documentationContent">
+                <div class="loading-spinner">Loading documentation...</div>
+            </div>
         </div>
     </main>
 

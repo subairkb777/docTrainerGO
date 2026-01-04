@@ -4,17 +4,102 @@
 let searchIndex = [];
 let fuse = null;
 let chatOpen = true;
+let contentData = null;
 
 // ===========================
 // Initialization
 // ===========================
 document.addEventListener('DOMContentLoaded', () => {
+    loadContent();
     initializeSidebar();
     initializeSearch();
     initializeChat();
     initializeNavigation();
-    highlightActiveSection();
 });
+
+// ===========================
+// Content Loading
+// ===========================
+async function loadContent() {
+    try {
+        const response = await fetch('/docs/data/content.json');
+        contentData = await response.json();
+        
+        renderNavigation(contentData.sections);
+        renderContent(contentData.sections);
+        highlightActiveSection();
+        
+        console.log(`Loaded ${contentData.metadata.total_sections} sections`);
+    } catch (error) {
+        console.error('Failed to load content:', error);
+        document.getElementById('documentationContent').innerHTML = 
+            '<div class="error-message">Failed to load documentation. Please try again later.</div>';
+    }
+}
+
+function renderNavigation(sections) {
+    const navMenu = document.getElementById('navMenu');
+    navMenu.innerHTML = sections.map(section => `
+        <li class="nav-item nav-level-${section.level}">
+            <a href="#${section.id}" class="nav-link">${escapeHtml(section.heading)}</a>
+        </li>
+    `).join('');
+}
+
+function renderContent(sections) {
+    const contentContainer = document.getElementById('documentationContent');
+    contentContainer.innerHTML = sections.map(section => `
+        <section class="doc-section" id="${section.id}">
+            <h${section.level} class="section-heading">${escapeHtml(section.heading)}</h${section.level}>
+            
+            <div class="section-content">
+                ${formatContentHTML(section.content)}
+            </div>
+
+            ${section.images && section.images.length > 0 ? `
+                <div class="section-images">
+                    ${section.images.map(img => `
+                        <div class="image-container">
+                            <img src="/docs/images/${img}" alt="${img}" loading="lazy">
+                        </div>
+                    `).join('')}
+                </div>
+            ` : ''}
+        </section>
+    `).join('');
+}
+
+function formatContentHTML(content) {
+    // Split content into paragraphs
+    const sentences = content.split('. ');
+    const paragraphs = [];
+    let currentPara = [];
+    
+    sentences.forEach((sentence, i) => {
+        sentence = sentence.trim();
+        if (sentence === '') return;
+        
+        // Add period back if not last sentence
+        if (i < sentences.length - 1 && !sentence.endsWith('.')) {
+            sentence += '.';
+        }
+        
+        currentPara.push(sentence);
+        
+        // Create new paragraph every 3-4 sentences
+        if (currentPara.length >= 3) {
+            paragraphs.push(currentPara.join(' '));
+            currentPara = [];
+        }
+    });
+    
+    // Add remaining sentences
+    if (currentPara.length > 0) {
+        paragraphs.push(currentPara.join(' '));
+    }
+    
+    return paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('\n');
+}
 
 // ===========================
 // Sidebar Navigation

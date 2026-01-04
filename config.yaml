@@ -1,0 +1,37 @@
+# DocTrainerGO Configuration
+
+# Input source type: "pdf" or "markdown"
+input_type: markdown
+
+# PDF settings (when input_type is "pdf")
+pdf:
+  path: input/user_guide.pdf
+  extract_images: true
+
+# Markdown settings (when input_type is "markdown")
+markdown:
+  directory: input/markdown
+  # Process all .md files in the directory
+  auto_discover: true
+  # Or specify individual files
+  files:
+    - input/markdown/01-introduction.md
+    - input/markdown/02-getting-started.md
+    - input/markdown/03-features.md
+    - input/markdown/04-configuration.md
+    - input/markdown/05-advanced.md
+
+# Output settings
+output:
+  directory: docs
+  title: "Documentation"
+
+# Server settings
+server:
+  port: 8080
+  host: localhost
+
+# Ollama settings
+ollama:
+  url: http://localhost:11434
+  model: llama3.2

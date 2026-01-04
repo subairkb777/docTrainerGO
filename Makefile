@@ -75,10 +75,28 @@ build:
 
 # Clean generated files
 clean:
-	@echo "→ Cleaning generated files..."
-	@rm -rf docs/
-	@rm -f doctrainer
-	@echo "✓ Cleaned"
+	@echo "🧹 Cleaning generated files..."
+	@echo ""
+	@if [ -d "docs/" ]; then \
+		echo "  Removing docs/ directory..."; \
+		rm -rf docs/; \
+		echo "  ✓ Removed docs/ (HTML, data, images, search index)"; \
+	else \
+		echo "  ⚠️  docs/ directory not found (already clean)"; \
+	fi
+	@if [ -f "main" ]; then \
+		rm -f main; \
+		echo "  ✓ Removed binary: main"; \
+	fi
+	@if [ -f "doctrainer" ]; then \
+		rm -f doctrainer; \
+		echo "  ✓ Removed binary: doctrainer"; \
+	fi
+	@echo ""
+	@echo "✅ Cleanup complete!"
+	@echo ""
+	@echo "To regenerate:"
+	@echo "  make process PDF=input/your-file.pdf"
 
 # Run tests
 test:
