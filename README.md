@@ -31,27 +31,84 @@ DocTrainerGO is a modular Go-based solution that transforms PDFs or Markdown fil
 
 ## ✨ Features
 
-### Input Processing
-- **PDF Support**: Extract text, headings, and images using `github.com/ledongthuc/pdf`
-- **Markdown Support**: Process multiple .md files with auto-discovery or specified list
-- **Image Handling**: Automatic extraction from PDFs or copying from Markdown directories
-- **Smart Parsing**: Detects heading hierarchy and document structure
+### Core Capabilities
+
+#### 1. Dual Input Support
+- **PDF Processing**: Extract text, structure, and images from PDF files using `github.com/ledongthuc/pdf` and Poppler
+- **Markdown Processing**: Parse standard Markdown with front matter, code blocks, tables, and links
+- **Auto-Discovery**: Automatically find all `.md` files in a directory
+- **Smart Parsing**: Detects heading hierarchy (H1-H6) and document structure
 - **Config-Driven**: Switch between PDF/Markdown via `config.yaml`
 
-### Documentation Website
-- **Modern UI**: Clean, professional interface with sidebar navigation
-- **Fuzzy Search**: Client-side search using Fuse.js 6.6.2
-- **Responsive**: Optimized for mobile, tablet, and desktop
-- **Dynamic Loading**: Lightweight HTML (3.7KB) loads content from JSON (96% size reduction!)
-- **Image Galleries**: Lazy loading with proper alt text
-- **Smooth Navigation**: Collapsible sections with scroll-to-heading
-
-### AI Chat Assistant
-- **Floating Widget**: Non-intrusive chat interface in bottom-right corner
-- **Context-Aware**: Uses your documentation content for accurate, relevant answers
-- **Local LLM**: Powered by Ollama (llama3.2, mistral, codellama, etc.)
-- **Formatted Responses**: Supports lists, code blocks, **bold**, *italic*
+#### 2. AI-Powered Chat Assistant
+- **Context-Aware Responses**: Answers based on your documentation content
+- **Local LLM**: Runs on your machine using Ollama (llama3.2, mistral, codellama)
+- **Formatted Responses**: Supports lists, code blocks, **bold**, *italic*, inline code
+- **Real-time Interaction**: Fast responses with streaming support
+- **Floating Widget**: Non-intrusive chat interface, minimizable and accessible
+- **Optional**: Can be disabled via config for lightweight deployments
 - **Privacy-First**: No data sent to cloud services
+
+#### 3. Advanced Search
+- **Fuzzy Matching**: Find content even with typos using Fuse.js 6.6.2
+- **Weighted Results**: Prioritizes headings over content
+- **Real-time Results**: Instant search as you type
+- **Keyboard Shortcuts**: `Ctrl/Cmd + K` to focus search
+- **Client-Side**: No server queries needed
+
+#### 4. Organized Data Structure
+Content stored in maintainable JSON format:
+- **content.json**: Master file with all sections (single source of truth)
+- **sections/*.json**: Individual section files for easy editing and version control
+- **search-index.json**: Optimized for fast search queries
+- **API-Ready**: Use generated data in other applications
+
+#### 5. Responsive UI
+- **Mobile-First Design**: Optimized for all screen sizes
+- **Sidebar Navigation**: Collapsible with searchable sections
+- **Dynamic Loading**: Lightweight HTML (3.7KB) loads content from JSON (96% size reduction!)
+- **Lazy Image Loading**: Images load as needed for fast page loads
+- **Dark Mode Ready**: Easy to customize with CSS variables
+- **Smooth Navigation**: Scroll-to-heading with active section highlighting
+
+#### 6. Image Support
+- **Automatic Extraction**: From PDFs using pdfimages (Poppler)
+- **Markdown Images**: Copy and reference images from markdown directories
+- **Lazy Loading**: Performance optimized
+- **Responsive Scaling**: Images adapt to container size
+- **Alt Text Support**: Built-in accessibility
+
+#### 7. Code Highlighting
+- Syntax highlighting for multiple languages
+- Inline code and code blocks
+- Language detection for better formatting
+
+#### 8. Configuration Management
+- Flexible YAML configuration
+- Enable/disable features (Ollama, image extraction, auto-discovery)
+- Override via command-line flags
+- Environment-specific configs
+
+### Advanced Features
+- **Multi-Format Support**: Easily switch between PDF and Markdown
+- **Custom Styling**: Modify CSS and HTML templates
+- **API Integration**: Access structured data via HTTP endpoints
+- **Extensible Architecture**: Clean, modular design (refactored from 396 → 79 lines in main.go!)
+- **Performance Optimized**: Fast processing, quick startup, minimal dependencies
+- **Security First**: Local processing, no external calls, privacy-focused
+
+### Generated Output
+```
+docs/
+├── index.html              # Lightweight shell (loads content dynamically)
+├── data/
+│   ├── content.json        # Complete documentation (all sections)
+│   └── sections/           # Individual section files
+│       ├── section-1.json  # Easy to edit, version control
+│       └── ...
+├── search-index.json       # Optimized for Fuse.js search
+├── images/                 # Extracted/copied images
+└── static/                 # CSS, JavaScript assets
 
 ---
 

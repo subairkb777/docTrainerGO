@@ -398,7 +398,7 @@ go tool pprof cpu.prof
 
 ```bash
 # Clone repository
-git clone https://github.com/subairkb777/docTrainerGO-pdf.git
+git clone https://github.com/subairkb777/docTrainerGO.git
 
 # Create feature branch
 git checkout -b feature/my-feature
@@ -435,8 +435,8 @@ func Process_markdown(FILE string) error {
 - [Markdown Guide](https://www.markdownguide.org/)
 
 ### Community
-- [GitHub Issues](https://github.com/subairkb777/docTrainerGO-pdf/issues)
-- [Discussions](https://github.com/subairkb777/docTrainerGO-pdf/discussions)
+- [GitHub Issues](https://github.com/subairkb777/docTrainerGO/issues)
+- [Discussions](https://github.com/subairkb777/docTrainerGO/discussions)
 
 ### Tools
 - [Poppler](https://poppler.freedesktop.org/)

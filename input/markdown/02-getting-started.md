@@ -41,8 +41,8 @@ Before installing DocTrainerGO, ensure you have the following:
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/subairkb777/docTrainerGO-pdf.git
-cd docTrainerGO-pdf
+git clone https://github.com/subairkb777/docTrainerGO.git
+cd docTrainerGO
 ```
 
 ### Step 2: Install Dependencies
