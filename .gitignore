@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+main
 docTrainerGO
 
 # Generated files
@@ -20,3 +21,7 @@ docs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Go specific
+go.work
+vendor/

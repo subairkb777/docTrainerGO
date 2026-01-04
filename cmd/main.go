@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -31,6 +32,25 @@ type ChatRequest struct {
 type ChatResponse struct {
 	Answer string `json:"answer"`
 	Error  string `json:"error,omitempty"`
+}
+
+// ContentData represents the structured content from data/content.json
+type ContentData struct {
+	Title    string        `json:"title"`
+	Sections []SectionData `json:"sections"`
+	Metadata struct {
+		TotalSections int `json:"total_sections"`
+		TotalImages   int `json:"total_images"`
+	} `json:"metadata"`
+}
+
+// SectionData represents a section in content.json
+type SectionData struct {
+	ID      string   `json:"id"`
+	Level   int      `json:"level"`
+	Heading string   `json:"heading"`
+	Content string   `json:"content"`
+	Images  []string `json:"images"`
 }
 
 // SearchItem represents an item in the search index
@@ -117,6 +137,13 @@ func processPDF(pdfPath string) error {
 		return fmt.Errorf("PDF file not found: %s", pdfPath)
 	}
 
+	// Extract images using pdfimages (more reliable than Go libraries)
+	fmt.Println("→ Extracting images from PDF...")
+	if err := extractImagesWithPdfimages(pdfPath, docsDir); err != nil {
+		fmt.Printf("  Warning: Image extraction failed: %v\n", err)
+		fmt.Println("  Continuing without images...")
+	}
+
 	// Parse PDF
 	fmt.Println("→ Parsing PDF and extracting content...")
 	parser := pdf.NewParser(docsDir)
@@ -126,6 +153,13 @@ func processPDF(pdfPath string) error {
 	}
 	fmt.Printf("  Found %d sections\n", len(doc.Sections))
 
+	// Generate structured data files
+	fmt.Println("→ Generating structured data...")
+	dataGen := generator.NewDataGenerator(docsDir)
+	if err := dataGen.Generate(doc); err != nil {
+		return fmt.Errorf("failed to generate data files: %w", err)
+	}
+
 	// Generate HTML
 	fmt.Println("→ Generating HTML pages...")
 	gen := generator.NewGenerator("templates/page.html", docsDir)
@@ -133,7 +167,7 @@ func processPDF(pdfPath string) error {
 		return fmt.Errorf("failed to generate HTML: %w", err)
 	}
 
-	// Generate search index
+	// Generate search index (keeping for backward compatibility)
 	fmt.Println("→ Creating search index...")
 	indexGen := search.NewIndexGenerator(docsDir)
 	if err := indexGen.Generate(doc); err != nil {
@@ -233,29 +267,31 @@ func handleChat(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-// loadDocumentationContext loads the documentation content from search index
+// loadDocumentationContext loads the documentation content from data/content.json
 func loadDocumentationContext() (string, error) {
-	// Load the search index JSON
-	indexPath := filepath.Join(docsDir, "search-index.json")
-	file, err := os.Open(indexPath)
+	// Load the content.json file (new structured format)
+	contentPath := filepath.Join(docsDir, "data", "content.json")
+	file, err := os.Open(contentPath)
 	if err != nil {
-		return "", fmt.Errorf("failed to open search index: %w", err)
+		return "", fmt.Errorf("failed to open content.json: %w", err)
 	}
 	defer file.Close()
 
-	// Parse the search index
-	var index SearchIndex
-	if err := json.NewDecoder(file).Decode(&index); err != nil {
-		return "", fmt.Errorf("failed to parse search index: %w", err)
+	// Parse the content data
+	var content ContentData
+	if err := json.NewDecoder(file).Decode(&content); err != nil {
+		return "", fmt.Errorf("failed to parse content.json: %w", err)
 	}
 
 	// Build context from all sections
 	var contextBuilder strings.Builder
-	contextBuilder.WriteString("=== DOCUMENTATION CONTENT ===\n\n")
+	contextBuilder.WriteString(fmt.Sprintf("=== %s ===\n\n", content.Title))
+	contextBuilder.WriteString(fmt.Sprintf("Total Sections: %d | Total Images: %d\n\n",
+		content.Metadata.TotalSections, content.Metadata.TotalImages))
 
-	for _, item := range index.Items {
-		contextBuilder.WriteString(fmt.Sprintf("## %s\n", item.Heading))
-		contextBuilder.WriteString(fmt.Sprintf("%s\n\n", item.Content))
+	for _, section := range content.Sections {
+		contextBuilder.WriteString(fmt.Sprintf("## %s\n", section.Heading))
+		contextBuilder.WriteString(fmt.Sprintf("%s\n\n", section.Content))
 	}
 
 	context := contextBuilder.String()
@@ -275,4 +311,43 @@ func respondWithError(w http.ResponseWriter, message string, statusCode int) {
 		Error: message,
 	}
 	json.NewEncoder(w).Encode(resp)
+}
+
+// extractImagesWithPdfimages uses the pdfimages command-line tool to extract images
+func extractImagesWithPdfimages(pdfPath, outputDir string) error {
+	// Check if pdfimages is available
+	if _, err := exec.LookPath("pdfimages"); err != nil {
+		return fmt.Errorf("pdfimages not found (install with: brew install poppler)")
+	}
+
+	// Create images directory
+	imageDir := filepath.Join(outputDir, "images")
+	if err := os.MkdirAll(imageDir, 0755); err != nil {
+		return fmt.Errorf("failed to create image directory: %w", err)
+	}
+
+	// Extract images as PNG
+	outputPrefix := filepath.Join(imageDir, "img")
+	cmd := exec.Command("pdfimages", "-png", pdfPath, outputPrefix)
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("pdfimages failed: %w\nOutput: %s", err, string(output))
+	}
+
+	// Count extracted images
+	entries, err := os.ReadDir(imageDir)
+	if err != nil {
+		return fmt.Errorf("failed to read image directory: %w", err)
+	}
+
+	imageCount := 0
+	for _, entry := range entries {
+		if !entry.IsDir() && (strings.HasSuffix(entry.Name(), ".png") || strings.HasSuffix(entry.Name(), ".jpg")) {
+			imageCount++
+		}
+	}
+
+	fmt.Printf("  Extracted %d images\n", imageCount)
+	return nil
 }

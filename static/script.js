@@ -43,10 +43,23 @@ function initializeSidebar() {
 // ===========================
 async function initializeSearch() {
     try {
-        // Load search index
-        const response = await fetch('/docs/search-index.json');
-        const data = await response.json();
-        searchIndex = data.items;
+        // Try to load from new structured data format first
+        let response = await fetch('/docs/data/content.json');
+        if (response.ok) {
+            const contentData = await response.json();
+            // Convert to search index format
+            searchIndex = contentData.sections.map(section => ({
+                id: section.id,
+                heading: section.heading,
+                content: section.content,
+                level: section.level
+            }));
+        } else {
+            // Fallback to old search-index.json
+            response = await fetch('/docs/search-index.json');
+            const data = await response.json();
+            searchIndex = data.items;
+        }
 
         // Initialize Fuse.js
         const options = {
